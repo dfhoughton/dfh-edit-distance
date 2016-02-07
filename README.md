@@ -19,6 +19,23 @@ analyzer.explain('cat','dog');
 // ["substituted d for c (1)", "substituted o for a (1)", "substituted g for t (1)"]
 ```
 
+## Description
+
+This package provides a pluggable edit distance algorithm in the `dfh.ed`
+namespace. You can use the pre-packaged Levenshtein algorithm or implement
+your own, which involves conditioning the cost of single-character insertions,
+deletions, and substitutions on whatever suits you. I will include some utility
+functions for generating algorithms with cheap suffixes, or a known set of
+suffixes, in the future, and perhaps a sample algorithm for Welsh which makes
+word-initial changes in a fixed set and internal vowel changes cheap as well.
+This should be sufficient to whet your imagination.
+
+## Installation
+
+I haven't packaged this up in any special way. You can clone this, of course,
+and use it however you wish. I've also included the coffeescript compiled into
+puffy and minified javascript.
+
 ## Module functions
 
 ### `lev` or `levenshtein`
