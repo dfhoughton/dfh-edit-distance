@@ -64,9 +64,9 @@ class Cell
       sequence.unshift cell
     i.describe() for i in sequence
 
-  list: -> @matrix.list
+  list: -> @l ?= []
 
-  hash: -> @matrix.hash
+  hash: -> @h ?= {}
 
 class CharSeq
   constructor: (s) ->
@@ -82,8 +82,10 @@ class Char
     @c    = c
     @pre  = pre
     @post = post
-    @list = []
-    @hash = {}
+
+  list: -> @l ?= []
+
+  hash: -> @h ?= {}
 
   isFront: -> @pre < @post
 
@@ -96,8 +98,6 @@ class Matrix
     @source      = new CharSeq source
     @destination = new CharSeq destination
     @scale       = scale
-    @list        = []
-    @hash        = {}
     @sDim = sDim = source.length
     @dDim = dDim = destination.length
     @matrix = new Array sDim + 1
@@ -123,6 +123,10 @@ class Matrix
   finalCell: -> @matrix[@sDim][@dDim]
 
   cell: (s, d) -> @matrix[s][d]
+
+  list: -> @l ?= []
+
+  hash: -> @h ?= {}
 
   c: (s, d) ->
     s1 = s - 1
