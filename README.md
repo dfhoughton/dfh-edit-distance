@@ -6,5 +6,13 @@ I first implemented in Ruby.
 
 ```javascript
 var analyzer = dfh.ed.levenshtein();
-console.log(analyzer.distance('cat', 'cats')); // 1
+// undefined
+analyzer.distance('cat','rat');
+// 1
+analyzer.distance('cat','dog');
+// 3
+analyzer.explain('cat','rat');
+// ["substituted r for c (1)", "kept a (0)", "kept t (0)"]
+analyzer.explain('cat','dog');
+// ["substituted d for c (1)", "substituted o for a (1)", "substituted g for t (1)"]
 ```
