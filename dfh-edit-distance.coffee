@@ -157,8 +157,7 @@ class Matrix
         e = 's'
     @matrix[s][d] = new Cell @, @source, @destination, s, d, w, p, e
 
-ed.analyzer = (alg) ->
-  new Analyzer alg
+ed.analyzer = (alg) -> new Analyzer alg
 
 ed.lev = ed.levenshtein = ->
   new Analyzer
