@@ -43,7 +43,10 @@
       if (includeRoot) {
         chain.push(t.root);
       }
-      return chain.reverse();
+      if (!this.scale.reversed) {
+        chain = chain.reverse();
+      }
+      return chain;
     };
 
     Analyzer.prototype.table = function(s1, s2) {
@@ -198,38 +201,52 @@
 
   Matrix = (function() {
     function Matrix(source, destination, scale) {
-      var d, dDim, e, i, p, s, sDim, w, _i, _j, _k, _l, _len, _len1, _m, _n, _o, _ref, _ref1, _ref2, _results, _results1;
+      var d, dDim, e, i, p, s, sDim, w, _i, _j, _k, _l, _len, _len1, _m, _n, _o, _ref, _ref1, _ref2, _ref3, _results, _results1;
+      if (scale.normalize) {
+        _ref = (function() {
+          var _i, _len, _ref, _results;
+          _ref = [source, destination];
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            s = _ref[_i];
+            _results.push(scale.normalize(s));
+          }
+          return _results;
+        })(), source = _ref[0], destination = _ref[1];
+      }
       this.source = new CharSeq(source);
       this.destination = new CharSeq(destination);
       this.scale = scale;
       this.sDim = sDim = source.length;
       this.dDim = dDim = destination.length;
       this.matrix = new Array(sDim + 1);
-      for (i = _i = 0, _ref = this.sDim; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+      for (i = _i = 0, _ref1 = this.sDim; 0 <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = 0 <= _ref1 ? ++_i : --_i) {
         this.matrix[i] = new Array(dDim + 1);
       }
       this.root = new Cell(this, this.source, this.destination, 0, 0, 0);
       this.matrix[0][0] = this.root;
-      this.scale.prepare(this);
-      _ref1 = (sDim ? (function() {
+      if (this.scale.prepare) {
+        this.scale.prepare(this);
+      }
+      _ref2 = (sDim ? (function() {
         _results = [];
         for (var _k = 1; 1 <= sDim ? _k <= sDim : _k >= sDim; 1 <= sDim ? _k++ : _k--){ _results.push(_k); }
         return _results;
       }).apply(this) : []);
-      for (_j = 0, _len = _ref1.length; _j < _len; _j++) {
-        i = _ref1[_j];
+      for (_j = 0, _len = _ref2.length; _j < _len; _j++) {
+        i = _ref2[_j];
         p = this.matrix[i - 1][0];
         e = 'd';
         w = p.distance + scale.weigh(p, e, i, 0);
         this.matrix[i][0] = new Cell(this, this.source, this.destination, i, 0, w, p, e);
       }
-      _ref2 = (dDim ? (function() {
+      _ref3 = (dDim ? (function() {
         _results1 = [];
         for (var _m = 1; 1 <= dDim ? _m <= dDim : _m >= dDim; 1 <= dDim ? _m++ : _m--){ _results1.push(_m); }
         return _results1;
       }).apply(this) : []);
-      for (_l = 0, _len1 = _ref2.length; _l < _len1; _l++) {
-        i = _ref2[_l];
+      for (_l = 0, _len1 = _ref3.length; _l < _len1; _l++) {
+        i = _ref3[_l];
         p = this.matrix[0][i - 1];
         e = 'i';
         w = p.distance + scale.weigh(p, e, 0, i);
@@ -310,9 +327,128 @@
     return new Analyzer({
       weigh: function(parent, edit, sourceOffset, destinationOffset) {
         return 1;
-      },
-      prepare: function(matrix) {}
+      }
     });
+  };
+
+  ed.suffixAlgorithm = function(finder, w1, w2, w3) {
+    if (w1 == null) {
+      w1 = 0.25;
+    }
+    if (w2 == null) {
+      w2 = 0;
+    }
+    if (w3 == null) {
+      w3 = 1;
+    }
+    return {
+      prepare: function(matrix) {
+        var i, w, _i, _len, _ref, _results;
+        _ref = [matrix.source, matrix.destination];
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          w = _ref[_i];
+          _results.push((function() {
+            var _j, _len1, _ref1, _results1;
+            _ref1 = finder(w);
+            _results1 = [];
+            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+              i = _ref1[_j];
+              _results1.push(w.at(i).hash().suffix = true);
+            }
+            return _results1;
+          })());
+        }
+        return _results;
+      },
+      weigh: function(parent, edit, s, d) {
+        var w;
+        if (edit === 'd' && ((w = this.isSuffixDeletion(parent, d)) != null)) {
+          return w;
+        } else if (edit === 'i' && ((w = this.isSuffixInsertion(parent, d)) != null)) {
+          return w;
+        } else {
+          return w3;
+        }
+      },
+      isSuffixDeletion: function(cell, o, w) {
+        var c;
+        if (w == null) {
+          w = cell.source;
+        }
+        c = w.at(o - 1);
+        if (c.hash().suffix) {
+          return w1;
+        } else if (cell.parent && this.isSuffixDeletion(cell.parent, cell.s, w)) {
+          return w2;
+        }
+      },
+      isSuffixInsertion: function(cell, o, w) {
+        var c;
+        if (w == null) {
+          w = cell.destination;
+        }
+        c = w.at(o - 1);
+        if (c.hash().suffix) {
+          return w1;
+        } else if (cell.parent && this.isSuffixInsertion(cell.parent, cell.d, w)) {
+          return w2;
+        }
+      }
+    };
+  };
+
+  ed.cheapMarginsAlgorithm = function(startOffset, endOffset, w1, w2, w3) {
+    if (startOffset == null) {
+      startOffset = 0;
+    }
+    if (endOffset == null) {
+      endOffset = 0;
+    }
+    if (w1 == null) {
+      w1 = 0.25;
+    }
+    if (w2 == null) {
+      w2 = 1;
+    }
+    if (w3 == null) {
+      w3 = 0;
+    }
+    return {
+      isPrefixy: function(word, i) {
+        var c;
+        return (c = word.at(i - 1)) && c.isFront() && c.pre < startOffset;
+      },
+      isSuffixy: function(word, i) {
+        var c;
+        return (c = word.at(i - 1)) && c.isBack() && c.post < endOffset;
+      },
+      weigh: function(parent, edit, s, d) {
+        var w;
+        w = (function() {
+          switch (edit) {
+            case 'd':
+              if (this.isSuffixy(parent.source, s) || this.isPrefixy(parent.source, s)) {
+                return w1;
+              }
+              break;
+            case 'i':
+              if (this.isSuffixy(parent.destination, d) || this.isPrefixy(parent.destination, d)) {
+                return w1;
+              }
+              break;
+            case 's':
+              if (this.isSuffixy(parent.source, s) && this.isSuffixy(parent.destination, d) || this.isPrefixy(parent.source, s) && this.isPrefixy(parent.destination, d)) {
+                return w1;
+              }
+              break;
+            default:
+              return w3;
+          }
+        }).call(this);
+        return w != null ? w : w = w2;
+      }
+    };
   };
 
 }).call(this);

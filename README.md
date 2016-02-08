@@ -45,15 +45,14 @@ where insertions, deletions, and substitutions all have a cost of 1.
 
 ### `analyzer(obj)`
 
-This takes an object implementing two methods, `weigh` and `prepare`, and returns
+This takes an object implementing at least one method, `weigh`, and returns
 an `Analyzer`. This, for example, implements the Levenshtein algorithm:
 
 ```javascript
 dfh.ed.analyzer({
   weigh: function(parent, edit, sourceOffset, destinationOffset) {
     return 1;
-  },
-  prepare: function(matrix) {}
+  }
 });
 ```
 
@@ -63,8 +62,25 @@ denoting "no change," "substitution," "insertion," and "deletion," respectively.
 The `sourceOffset` and `destinationOffset` indicate the position of the two
 relevant characters in the two strings.
 
-The `prepare` method can be used to pre-cache information that may be of use
-to the algorithm.
+Other optional attributes of this object are
+
+### `normalize(s)`
+
+A normalization step applied to the source and destination strings before any
+further processing.
+
+### `prepare(matrix)`
+
+A pre-processing step.
+
+### `reversed`
+
+Whether or not the `normalization` step reversed the order of the two strings.
+The edit distance algorithm proceeds in a fixed direction from left to right.
+In a prefixing language like Swahili it may be better to run the algorithm from
+right to left, for which you need to reverse the source and destination. This
+can make for confusing edit explanations, however, unless you've recorded that
+you did this reversal. The attribute is expected to be a boolean, not a function.
 
 ## Analyzer methods
 

@@ -20,7 +20,8 @@ class Analyzer
       chain.push c
       c = c.parent
     chain.push t.root if includeRoot
-    chain.reverse()
+    chain = chain.reverse() unless @scale.reversed
+    chain
 
   table: (s1, s2) -> new Matrix s1, s2, @scale
 
@@ -95,6 +96,8 @@ class Char
 
 class Matrix
   constructor: (source, destination, scale) ->
+    if scale.normalize
+      [ source, destination ] = ( scale.normalize s for s in [ source, destination] )
     @source      = new CharSeq source
     @destination = new CharSeq destination
     @scale       = scale
@@ -104,7 +107,7 @@ class Matrix
     @matrix[i] = new Array dDim + 1 for i in [0..@sDim]
     @root = new Cell @, @source, @destination, 0, 0, 0
     @matrix[0][0] = @root
-    @scale.prepare @
+    @scale.prepare @ if @scale.prepare
     for i in ( if sDim then [1..sDim] else [] )
       p = @matrix[i-1][0]
       e = 'd'
@@ -164,6 +167,46 @@ class Matrix
 ed.analyzer = (alg) -> new Analyzer alg
 
 ed.lev = ed.levenshtein = ->
-  new Analyzer
-    weigh:   ( parent, edit, sourceOffset, destinationOffset ) -> 1
-    prepare: (matrix) ->
+  new Analyzer weigh: ( parent, edit, sourceOffset, destinationOffset ) -> 1
+
+ed.suffixAlgorithm = (finder, w1=0.25, w2=0, w3=1) ->
+  prepare: (matrix) ->
+    for w in [ matrix.source, matrix.destination ]
+      w.at(i).hash().suffix = true for i in finder(w)
+  weigh: (parent, edit, s, d) ->
+    if edit is 'd' and ( w = @isSuffixDeletion parent, d )?
+      w
+    else if edit is 'i' and ( w = @isSuffixInsertion parent, d )?
+      w
+    else
+      w3
+  isSuffixDeletion: (cell, o, w=cell.source) ->
+    c = w.at o - 1
+    if c.hash().suffix
+      w1
+    else if cell.parent && @isSuffixDeletion( cell.parent, cell.s, w )
+      w2
+  isSuffixInsertion: (cell, o, w=cell.destination) ->
+    c = w.at o - 1
+    if c.hash().suffix
+      w1
+    else if cell.parent && @isSuffixInsertion( cell.parent, cell.d, w )
+      w2
+
+ed.cheapMarginsAlgorithm = (startOffset=0, endOffset=0, w1=0.25, w2=1, w3=0) ->
+  isPrefixy: (word, i) ->
+    ( c = word.at i - 1 ) && c.isFront() && c.pre < startOffset
+  isSuffixy: (word, i) ->
+    ( c = word.at i - 1 ) && c.isBack() && c.post < endOffset
+  weigh: (parent, edit, s, d) ->
+    w = switch edit
+      when 'd'
+        w1 if @isSuffixy( parent.source, s ) or @isPrefixy( parent.source, s )
+      when 'i'
+        w1 if @isSuffixy( parent.destination, d ) or @isPrefixy( parent.destination, d )
+      when 's'
+        if @isSuffixy( parent.source, s ) and @isSuffixy( parent.destination, d ) or @isPrefixy( parent.source, s ) and @isPrefixy( parent.destination, d )
+          w1
+      else
+        w3
+    w ?= w2
