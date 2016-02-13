@@ -82,7 +82,7 @@ right to left, for which you need to reverse the source and destination. This
 can make for confusing edit explanations, however, unless you've recorded that
 you did this reversal. The attribute is expected to be a boolean, not a function.
 
-### cheapMargins(startOffset=0, endOffset=0, cheap=0.25, expensive=1, match=0)
+### `cheapMargins(startOffset=0, endOffset=0, cheap=0.25, expensive=1, match=0)`
 
 The `cheapMargins` function generates an algorithm for which marginal edits --
 those in some fixed-width prefix or suffix of the string -- are cheaper than
