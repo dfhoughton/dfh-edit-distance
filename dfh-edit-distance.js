@@ -391,72 +391,7 @@
     });
   };
 
-  ed.suffixAlgorithm = function(finder, w1, w2, w3) {
-    if (w1 == null) {
-      w1 = 0.25;
-    }
-    if (w2 == null) {
-      w2 = 0;
-    }
-    if (w3 == null) {
-      w3 = 1;
-    }
-    return {
-      prepare: function(matrix) {
-        var i, w, _i, _len, _ref, _results;
-        _ref = [matrix.source, matrix.destination];
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          w = _ref[_i];
-          _results.push((function() {
-            var _j, _len1, _ref1, _results1;
-            _ref1 = finder(w);
-            _results1 = [];
-            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-              i = _ref1[_j];
-              _results1.push(w.at(i).hash().suffix = true);
-            }
-            return _results1;
-          })());
-        }
-        return _results;
-      },
-      weigh: function(parent, edit, s, d) {
-        var w;
-        if (edit === 'd' && ((w = this.isSuffixDeletion(parent, d)) != null)) {
-          return w;
-        } else if (edit === 'i' && ((w = this.isSuffixInsertion(parent, d)) != null)) {
-          return w;
-        } else {
-          return w3;
-        }
-      },
-      isSuffixDeletion: function(cell, o, w) {
-        var c;
-        if (w == null) {
-          w = cell.source;
-        }
-        if ((c = w.at(o - 1)) && c.hash().suffix) {
-          return w1;
-        } else if (cell.parent && this.isSuffixDeletion(cell.parent, cell.s, w)) {
-          return w2;
-        }
-      },
-      isSuffixInsertion: function(cell, o, w) {
-        var c;
-        if (w == null) {
-          w = cell.destination;
-        }
-        if ((c = w.at(o - 1)) && c.hash().suffix) {
-          return w1;
-        } else if (cell.parent && this.isSuffixInsertion(cell.parent, cell.d, w)) {
-          return w2;
-        }
-      }
-    };
-  };
-
-  ed.cheapMarginsAlgorithm = function(startOffset, endOffset, w1, w2, w3) {
+  ed.cheapMargins = function(startOffset, endOffset, w1, w2, w3) {
     if (startOffset == null) {
       startOffset = 0;
     }
