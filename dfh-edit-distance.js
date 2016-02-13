@@ -57,6 +57,13 @@
       return this.analyze(s1, s2).explain();
     };
 
+    Analyzer.prototype.chart = function(s1, s2, width) {
+      if (width == null) {
+        width = 2;
+      }
+      return this.table(s1, s2).chart(width);
+    };
+
     return Analyzer;
 
   })();
@@ -80,6 +87,41 @@
     Cell.prototype.cost = function() {
       if (!this.isRoot()) {
         return this.myCost != null ? this.myCost : this.myCost = this.distance - this.parent.distance;
+      }
+    };
+
+    Cell.prototype.arrow = function() {
+      if (this.isRoot()) {
+        return '\u00b7';
+      } else if (this.s === this.parent.s) {
+        return '\u21d0';
+      } else if (this.d === this.parent.d) {
+        return '\u21d1';
+      } else {
+        return '\u21d6';
+      }
+    };
+
+    Cell.prototype.chart = function(width) {
+      var i;
+      if (width == null) {
+        width = 2;
+      }
+      if (this.s && this.d) {
+        return "|" + (this.arrow()) + "   " + (this.cost().toFixed(width));
+      } else if (this.s) {
+        return "" + (this.arrow()) + " " + (this.source.at(this.s - 1)) + " " + (this.cost().toFixed(width));
+      } else if (this.d) {
+        return "|" + (this.arrow()) + " " + (this.destination.at(this.d - 1)) + " " + (this.cost().toFixed(width));
+      } else {
+        return '     ' + ((function() {
+          var _i, _results;
+          _results = [];
+          for (i = _i = 0; 0 <= width ? _i < width : _i > width; i = 0 <= width ? ++_i : --_i) {
+            _results.push(' ');
+          }
+          return _results;
+        })()).join('');
       }
     };
 
@@ -261,6 +303,24 @@
       }
     }
 
+    Matrix.prototype.chart = function(width) {
+      var cell, row, s, _i, _j, _len, _len1, _ref;
+      if (width == null) {
+        width = 2;
+      }
+      s = '';
+      _ref = this.matrix;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        row = _ref[_i];
+        for (_j = 0, _len1 = row.length; _j < _len1; _j++) {
+          cell = row[_j];
+          s += cell.chart(width);
+        }
+        s += "\n";
+      }
+      return s;
+    };
+
     Matrix.prototype.finalCell = function() {
       return this.matrix[this.sDim][this.dDim];
     };
@@ -376,8 +436,7 @@
         if (w == null) {
           w = cell.source;
         }
-        c = w.at(o - 1);
-        if (c.hash().suffix) {
+        if ((c = w.at(o - 1)) && c.hash().suffix) {
           return w1;
         } else if (cell.parent && this.isSuffixDeletion(cell.parent, cell.s, w)) {
           return w2;
@@ -388,8 +447,7 @@
         if (w == null) {
           w = cell.destination;
         }
-        c = w.at(o - 1);
-        if (c.hash().suffix) {
+        if ((c = w.at(o - 1)) && c.hash().suffix) {
           return w1;
         } else if (cell.parent && this.isSuffixInsertion(cell.parent, cell.d, w)) {
           return w2;
@@ -417,11 +475,15 @@
     return {
       isPrefixy: function(word, i) {
         var c;
-        return (c = word.at(i - 1)) && c.isFront() && c.pre < startOffset;
+        if (startOffset) {
+          return (c = word.at(i - 1)) && c.isFront() && c.pre < startOffset;
+        }
       },
       isSuffixy: function(word, i) {
         var c;
-        return (c = word.at(i - 1)) && c.isBack() && c.post < endOffset;
+        if (endOffset) {
+          return (c = word.at(i - 1)) && c.isBack() && c.post < endOffset;
+        }
       },
       weigh: function(parent, edit, s, d) {
         var w;

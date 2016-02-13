@@ -27,6 +27,8 @@ class Analyzer
 
   explain: (s1, s2) -> @analyze( s1, s2 ).explain()
 
+  chart: (s1, s2, width=2) -> @table( s1, s2 ).chart(width)
+
 class Cell
   constructor: (matrix, source, destination, s, d, distance, parent, edit ) ->
     @matrix      = matrix
@@ -41,6 +43,26 @@ class Cell
   isRoot: -> !@parent
 
   cost: -> @myCost ?= @distance - @parent.distance unless @isRoot()
+
+  arrow: ->
+    if @isRoot()
+      '\u00b7' # ·
+    else if @s is @parent.s
+      '\u21d0' # ⇐
+    else if @d is @parent.d
+      '\u21d1' # ⇑
+    else
+      '\u21d6' # ⇖
+
+  chart: (width=2)->
+    if @s and @d
+      "|#{@arrow()}   #{@cost().toFixed(width)}"
+    else if @s
+      "#{@arrow()} #{@source.at(@s - 1)} #{@cost().toFixed(width)}"
+    else if @d
+      "|#{@arrow()} #{@destination.at(@d - 1)} #{@cost().toFixed(width)}"
+    else
+      '     ' + ( ' ' for i in [0...width] ).join('')
 
   chars: ->
     unless @myChars
@@ -123,6 +145,14 @@ class Matrix
         for d in [1..dDim]
           @c s, d
 
+  chart: (width=2) ->
+    s = ''
+    for row in @matrix
+      for cell in row
+        s += cell.chart(width)
+      s += "\n"
+    s
+
   finalCell: -> @matrix[@sDim][@dDim]
 
   cell: (s, d) -> @matrix[s][d]
@@ -169,35 +199,11 @@ ed.analyzer = (alg) -> new Analyzer alg
 ed.lev = ed.levenshtein = ->
   new Analyzer weigh: ( parent, edit, sourceOffset, destinationOffset ) -> 1
 
-ed.suffixAlgorithm = (finder, w1=0.25, w2=0, w3=1) ->
-  prepare: (matrix) ->
-    for w in [ matrix.source, matrix.destination ]
-      w.at(i).hash().suffix = true for i in finder(w)
-  weigh: (parent, edit, s, d) ->
-    if edit is 'd' and ( w = @isSuffixDeletion parent, d )?
-      w
-    else if edit is 'i' and ( w = @isSuffixInsertion parent, d )?
-      w
-    else
-      w3
-  isSuffixDeletion: (cell, o, w=cell.source) ->
-    c = w.at o - 1
-    if c.hash().suffix
-      w1
-    else if cell.parent && @isSuffixDeletion( cell.parent, cell.s, w )
-      w2
-  isSuffixInsertion: (cell, o, w=cell.destination) ->
-    c = w.at o - 1
-    if c.hash().suffix
-      w1
-    else if cell.parent && @isSuffixInsertion( cell.parent, cell.d, w )
-      w2
-
-ed.cheapMarginsAlgorithm = (startOffset=0, endOffset=0, w1=0.25, w2=1, w3=0) ->
+ed.cheapMargins = (startOffset=0, endOffset=0, w1=0.25, w2=1, w3=0) ->
   isPrefixy: (word, i) ->
-    ( c = word.at i - 1 ) && c.isFront() && c.pre < startOffset
+    ( c = word.at i - 1 ) && c.isFront() && c.pre < startOffset if startOffset
   isSuffixy: (word, i) ->
-    ( c = word.at i - 1 ) && c.isBack() && c.post < endOffset
+    ( c = word.at i - 1 ) && c.isBack() && c.post < endOffset if endOffset
   weigh: (parent, edit, s, d) ->
     w = switch edit
       when 'd'
