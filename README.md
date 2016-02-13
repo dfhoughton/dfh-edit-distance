@@ -133,6 +133,13 @@ algorithm.
 The bottom left-hand cell represents the final state. One can trace the edits
 used by following the arrows back to the top right.
 
+*Note that if you use the minified javascript included, you must specify the
+character set of the source as utf-8 for this to work:*
+
+```html
+<script src="dfh-edit-distance.min.js" charset="utf-8"></script>
+```
+
 ### other methods
 
 `Analyzer` has other methods beyond these -- `table`, `chain`, `analyze`,
