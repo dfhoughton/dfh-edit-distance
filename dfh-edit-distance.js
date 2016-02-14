@@ -57,11 +57,8 @@
       return this.analyze(s1, s2).explain();
     };
 
-    Analyzer.prototype.chart = function(s1, s2, width) {
-      if (width == null) {
-        width = 2;
-      }
-      return this.table(s1, s2).chart(width);
+    Analyzer.prototype.chart = function(s1, s2) {
+      return this.table(s1, s2).chart();
     };
 
     return Analyzer;
@@ -86,7 +83,7 @@
 
     Cell.prototype.cost = function() {
       if (!this.isRoot()) {
-        return this.myCost != null ? this.myCost : this.myCost = this.distance - this.parent.distance;
+        return this.c != null ? this.c : this.c = this.distance - this.parent.distance;
       }
     };
 
@@ -102,27 +99,30 @@
       }
     };
 
-    Cell.prototype.chart = function(width) {
-      var i;
-      if (width == null) {
-        width = 2;
-      }
+    Cell.prototype.chart = function(f) {
+      var c;
+      c = this.cost();
       if (this.s && this.d) {
-        return "|" + (this.arrow()) + "   " + (this.cost().toFixed(width));
+        return "|" + (this.arrow()) + " " + (f(c));
       } else if (this.s) {
-        return "" + (this.arrow()) + " " + (this.source.at(this.s - 1)) + " " + (this.cost().toFixed(width));
+        return "" + (this.arrow()) + (this.source.at(this.s - 1)) + (f(c));
       } else if (this.d) {
-        return "|" + (this.arrow()) + " " + (this.destination.at(this.d - 1)) + " " + (this.cost().toFixed(width));
+        return "|" + (this.arrow()) + (this.destination.at(this.d - 1)) + (f(c));
       } else {
-        return '     ' + ((function() {
-          var _i, _results;
-          _results = [];
-          for (i = _i = 0; 0 <= width ? _i < width : _i > width; i = 0 <= width ? ++_i : --_i) {
-            _results.push(' ');
-          }
-          return _results;
-        })()).join('');
+        return "  " + (f(' '));
       }
+    };
+
+    Cell.prototype.initial = function() {
+      var _ref;
+      return (_ref = this.parent) != null ? _ref.isRoot() : void 0;
+    };
+
+    Cell.prototype.final = function(source) {
+      if (source == null) {
+        source = false;
+      }
+      return source && this.s === this.source.length() || !source && this.d === this.destination.length();
     };
 
     Cell.prototype.chars = function() {
@@ -204,6 +204,10 @@
 
     CharSeq.prototype.toString = function() {
       return this.s;
+    };
+
+    CharSeq.prototype.length = function() {
+      return this.s.length;
     };
 
     return CharSeq;
@@ -303,18 +307,16 @@
       }
     }
 
-    Matrix.prototype.chart = function(width) {
-      var cell, row, s, _i, _j, _len, _len1, _ref;
-      if (width == null) {
-        width = 2;
-      }
+    Matrix.prototype.chart = function() {
+      var cell, f, row, s, _i, _j, _len, _len1, _ref;
       s = '';
+      f = this.nformat();
       _ref = this.matrix;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         row = _ref[_i];
         for (_j = 0, _len1 = row.length; _j < _len1; _j++) {
           cell = row[_j];
-          s += cell.chart(width);
+          s += cell.chart(f);
         }
         s += "\n";
       }
@@ -335,6 +337,57 @@
 
     Matrix.prototype.hash = function() {
       return this.h != null ? this.h : this.h = {};
+    };
+
+    Matrix.prototype.nformat = function() {
+      var c, cell, ci, cm, i, m, row, _i, _j, _len, _len1, _ref;
+      i = m = 0;
+      _ref = this.matrix;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        row = _ref[_i];
+        for (_j = 0, _len1 = row.length; _j < _len1; _j++) {
+          cell = row[_j];
+          c = cell.cost();
+          if (c == null) {
+            continue;
+          }
+          c = Math.abs(c).toString();
+          ci = c.replace(/(\d+)(\..*)?/, '$1').length;
+          cm = c.replace(/[^.]+\.?((.*))/, '$1').length;
+          if (ci > i) {
+            i = ci;
+          }
+          if (cm > m) {
+            m = cm;
+          }
+        }
+      }
+      return function(n) {
+        var j, l, signum, x;
+        if (n === ' ') {
+          l = m ? i + m + 2 : i + 1;
+          return ((function() {
+            var _k, _results;
+            _results = [];
+            for (x = _k = 0; 0 <= l ? _k < l : _k > l; x = 0 <= l ? ++_k : --_k) {
+              _results.push(' ');
+            }
+            return _results;
+          })()).join('');
+        } else {
+          signum = n < 0 ? '-' : ' ';
+          l = i - Math.trunc(Math.abs(n)).toString().length;
+          l = ((function() {
+            var _k, _results;
+            _results = [];
+            for (j = _k = 0; 0 <= l ? _k < l : _k > l; j = 0 <= l ? ++_k : --_k) {
+              _results.push(' ');
+            }
+            return _results;
+          })()).join('');
+          return l + signum + n.toFixed(m).toString();
+        }
+      };
     };
 
     Matrix.prototype.c = function(s, d) {

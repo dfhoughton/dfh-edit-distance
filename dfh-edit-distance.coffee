@@ -27,7 +27,7 @@ class Analyzer
 
   explain: (s1, s2) -> @analyze( s1, s2 ).explain()
 
-  chart: (s1, s2, width=2) -> @table( s1, s2 ).chart(width)
+  chart: (s1, s2) -> @table( s1, s2 ).chart()
 
 class Cell
   constructor: (matrix, source, destination, s, d, distance, parent, edit ) ->
@@ -42,7 +42,7 @@ class Cell
 
   isRoot: -> !@parent
 
-  cost: -> @myCost ?= @distance - @parent.distance unless @isRoot()
+  cost: -> @c ?= @distance - @parent.distance unless @isRoot()
 
   arrow: ->
     if @isRoot()
@@ -54,15 +54,21 @@ class Cell
     else
       '\u21d6' # ⇖
 
-  chart: (width=2)->
+  chart: (f)->
+    c = @cost()
     if @s and @d
-      "|#{@arrow()}   #{@cost().toFixed(width)}"
+      "|#{@arrow()} #{ f c }"
     else if @s
-      "#{@arrow()} #{@source.at(@s - 1)} #{@cost().toFixed(width)}"
+      "#{@arrow()}#{@source.at(@s - 1)}#{ f c }"
     else if @d
-      "|#{@arrow()} #{@destination.at(@d - 1)} #{@cost().toFixed(width)}"
+      "|#{@arrow()}#{@destination.at(@d - 1)}#{ f c }"
     else
-      '     ' + ( ' ' for i in [0...width] ).join('')
+      "  #{ f ' ' }"
+
+  initial: -> @parent?.isRoot()
+
+  final: (source=false) ->
+    source and @s == @source.length() or not source and @d == @destination.length()
 
   chars: ->
     unless @myChars
@@ -99,6 +105,8 @@ class CharSeq
   at: (i) -> @chars[i]
 
   toString: -> @s
+
+  length: -> @s.length
 
 class Char
   constructor: (c, pre, post) ->
@@ -145,11 +153,12 @@ class Matrix
         for d in [1..dDim]
           @c s, d
 
-  chart: (width=2) ->
+  chart: ->
     s = ''
+    f = @nformat()
     for row in @matrix
       for cell in row
-        s += cell.chart(width)
+        s += cell.chart(f)
       s += "\n"
     s
 
@@ -160,6 +169,27 @@ class Matrix
   list: -> @l ?= []
 
   hash: -> @h ?= {}
+
+  nformat: ->
+    i = m = 0
+    for row in @matrix
+      for cell in row
+        c = cell.cost()
+        continue unless c?
+        c = Math.abs(c).toString()
+        ci = c.replace(/(\d+)(\..*)?/, '$1').length
+        cm = c.replace(/[^.]+\.?((.*))/, '$1').length
+        i = ci if ci > i
+        m = cm if cm > m
+    (n) ->
+      if n is ' '
+        l = if m then i + m + 2 else i + 1
+        ( ' ' for x in [0...l] ).join ''
+      else
+        signum = if n < 0 then '-' else ' '
+        l = i - Math.trunc( Math.abs n ).toString().length
+        l = ( ' ' for j in [0...l] ).join ''
+        l + signum + n.toFixed(m).toString()
 
   c: (s, d) ->
     s1 = s - 1

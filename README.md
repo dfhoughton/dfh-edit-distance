@@ -114,20 +114,20 @@ The edit distance between the strings `s` (source) and `d` (destination).
 A description of the optimal list of edits given the algorithm from `s` (source)
 to `d` (destination).
 
-### `chart(s, d, width=2)`
+### `chart(s, d)`
 
 A chart representing all the edits in the table used by the dynamic programming
 algorithm.
 
 ```
-> console.log(dfh.ed.lev().chart('walked','walking', 0))
-     |⇐ w 1|⇐ a 1|⇐ l 1|⇐ k 1|⇐ i 1|⇐ n 1|⇐ g 1
-⇑ w 1|⇖   0|⇐   1|⇐   1|⇐   1|⇐   1|⇐   1|⇐   1
-⇑ a 1|⇑   1|⇖   0|⇐   1|⇐   1|⇐   1|⇐   1|⇐   1
-⇑ l 1|⇑   1|⇑   1|⇖   0|⇐   1|⇐   1|⇐   1|⇐   1
-⇑ k 1|⇑   1|⇑   1|⇑   1|⇖   0|⇐   1|⇐   1|⇐   1
-⇑ e 1|⇑   1|⇑   1|⇑   1|⇑   1|⇖   1|⇖   1|⇖   1
-⇑ d 1|⇑   1|⇑   1|⇑   1|⇑   1|⇖   1|⇖   1|⇖   1
+> console.log(dfh.ed.lev().chart('walked','walking'))
+    |⇐w 1|⇐a 1|⇐l 1|⇐k 1|⇐i 1|⇐n 1|⇐g 1
+⇑w 1|⇖  0|⇐  1|⇐  1|⇐  1|⇐  1|⇐  1|⇐  1
+⇑a 1|⇑  1|⇖  0|⇐  1|⇐  1|⇐  1|⇐  1|⇐  1
+⇑l 1|⇑  1|⇑  1|⇖  0|⇐  1|⇐  1|⇐  1|⇐  1
+⇑k 1|⇑  1|⇑  1|⇑  1|⇖  0|⇐  1|⇐  1|⇐  1
+⇑e 1|⇑  1|⇑  1|⇑  1|⇑  1|⇖  1|⇖  1|⇖  1
+⇑d 1|⇑  1|⇑  1|⇑  1|⇑  1|⇖  1|⇖  1|⇖  1
 ```
 
 The bottom left-hand cell represents the final state. One can trace the edits
