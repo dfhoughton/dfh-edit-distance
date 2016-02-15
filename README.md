@@ -130,8 +130,8 @@ algorithm.
 ⇑d 1|⇑  1|⇑  1|⇑  1|⇑  1|⇖  1|⇖  1|⇖  1
 ```
 
-The bottom left-hand cell represents the final state. One can trace the edits
-used by following the arrows back to the top right.
+The bottom right-hand cell represents the final state. One can trace the edits
+used by following the arrows back to the top left.
 
 *Note that if you use the minified javascript included, you must specify the
 character set of the source as utf-8 for this to work:*
