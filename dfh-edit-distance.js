@@ -126,17 +126,18 @@
     };
 
     Cell.prototype.chars = function() {
-      var c1, c2;
-      if (!this.myChars) {
-        if (this.s !== 0) {
-          c1 = this.source.at(this.s - 1);
-        }
-        if (this.d !== 0) {
-          c2 = this.destination.at(this.d - 1);
-        }
-        this.myChars = [c1, c2];
-      }
-      return this.myChars;
+      return this.h != null ? this.h : this.h = (function(_this) {
+        return function() {
+          var c1, c2;
+          if (_this.s !== 0) {
+            c1 = _this.source.at(_this.s - 1);
+          }
+          if (_this.d !== 0) {
+            c2 = _this.destination.at(_this.d - 1);
+          }
+          return [c1, c2];
+        };
+      })(this)();
     };
 
     Cell.prototype.describe = function() {
@@ -363,7 +364,7 @@
         }
       }
       return function(n) {
-        var j, l, signum, x;
+        var a, j, l, signum, x;
         if (n === ' ') {
           l = m ? i + m + 2 : i + 1;
           return ((function() {
@@ -376,7 +377,8 @@
           })()).join('');
         } else {
           signum = n < 0 ? '-' : ' ';
-          l = i - Math.trunc(Math.abs(n)).toString().length;
+          a = Math.abs(n);
+          l = i - Math.trunc(a).toString().length;
           l = ((function() {
             var _k, _results;
             _results = [];
@@ -385,7 +387,7 @@
             }
             return _results;
           })()).join('');
-          return l + signum + n.toFixed(m).toString();
+          return l + signum + a.toFixed(m).toString();
         }
       };
     };

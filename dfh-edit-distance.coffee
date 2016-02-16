@@ -71,11 +71,10 @@ class Cell
     source and @s == @source.length() or not source and @d == @destination.length()
 
   chars: ->
-    unless @myChars
+    @h ?= do =>
       c1 = @source.at @s - 1      unless @s is 0
       c2 = @destination.at @d - 1 unless @d is 0
-      @myChars = [ c1, c2 ]
-    @myChars
+      [ c1, c2 ]
 
   describe: ->
     [ c1, c2 ] = @chars()
@@ -187,9 +186,10 @@ class Matrix
         ( ' ' for x in [0...l] ).join ''
       else
         signum = if n < 0 then '-' else ' '
-        l = i - Math.trunc( Math.abs n ).toString().length
+        a = Math.abs n
+        l = i - Math.trunc(a).toString().length
         l = ( ' ' for j in [0...l] ).join ''
-        l + signum + n.toFixed(m).toString()
+        l + signum + a.toFixed(m).toString()
 
   c: (s, d) ->
     s1 = s - 1
